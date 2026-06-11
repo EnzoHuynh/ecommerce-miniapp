@@ -1,0 +1,11 @@
+{
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "rootDir": "..",
+  "roots": ["<rootDir>/test"],
+  "testRegex": ".e2e-spec.ts$",
+  "moduleFileExtensions": ["ts", "js", "json"],
+  "moduleNameMapper": {
+    "^@app/shared$": "<rootDir>/../../packages/shared/src"
+  }
+}

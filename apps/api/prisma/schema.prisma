@@ -1,0 +1,77 @@
+// Prisma schema — PostgreSQL.
+// The same schema targets either a local Postgres (docker-compose) or a managed
+// Neon database; only DATABASE_URL changes.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sessions     Session[]
+
+  @@map("users")
+}
+
+/// One row per issued refresh token. Rotation creates a new row and revokes the
+/// previous one; `familyId` links a rotation chain so that replay of a revoked
+/// token can revoke the entire family (token-theft mitigation).
+model Session {
+  id               String    @id @default(uuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 of the opaque refresh token. The raw token lives only in the
+  /// httpOnly cookie; the DB never stores it in clear.
+  refreshTokenHash String    @unique
+  /// Groups a rotation chain for reuse detection.
+  familyId         String
+  /// Sliding-window anchor for the 30-minute inactivity timeout.
+  lastActivityAt   DateTime  @default(now())
+  /// Absolute expiry, carried across rotations (bounds total session lifetime).
+  expiresAt        DateTime
+  /// Set when the token is rotated out, logged out, or revoked for security.
+  revokedAt        DateTime?
+  userAgent        String?
+  ip               String?
+  createdAt        DateTime  @default(now())
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("sessions")
+}
+
+/// Audit trail used to enforce per-account brute-force lockout.
+model LoginAttempt {
+  id        String   @id @default(uuid())
+  email     String
+  ip        String?
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([ip, createdAt])
+  @@map("login_attempts")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  price       Decimal  @db.Decimal(10, 2)
+  imageUrl    String
+  createdAt   DateTime @default(now())
+
+  /// Composite index powering keyset (cursor) pagination ordered by
+  /// (createdAt, id). Makes "next page after this item" an index range scan.
+  @@index([createdAt, id])
+  @@map("products")
+}
