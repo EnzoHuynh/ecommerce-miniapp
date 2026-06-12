@@ -30,13 +30,23 @@ cp .env.example .env
 #   - set a strong JWT_ACCESS_SECRET:
 #     node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 
-# 3. Prepare the database in one command
+# 3. Start a PostgreSQL database BEFORE the next step.
+#    `pnpm setup` connects to DATABASE_URL — it does NOT create a server.
+#    With Docker this is one command (no Neon account needed):
+docker compose up -d
+#    (Skip this if you point DATABASE_URL at your own Neon/Postgres instead.)
+
+# 4. Prepare the database in one command
 #    (generate Prisma client → sync schema → seed 10k products + demo user)
 pnpm setup
 
-# 4. Run both apps (web :3000, api :3001)
+# 5. Run both apps (web :3000, api :3001)
 pnpm dev
 ```
+
+> ⚠️ **Run `docker compose up -d` (or have a Postgres reachable at `DATABASE_URL`)
+> _before_ `pnpm setup`.** `pnpm setup` only syncs the schema and seeds data — it
+> can't connect to a database that isn't running yet.
 
 > **Fastest path for reviewers:** with Docker, `docker compose up -d` then
 > `cp .env.example .env` needs **no edits** — the default `DATABASE_URL` already
