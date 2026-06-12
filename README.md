@@ -30,14 +30,18 @@ cp .env.example .env
 #   - set a strong JWT_ACCESS_SECRET:
 #     node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 
-# 3. Prepare the database (generate client, sync schema, seed 10k products + demo user)
-pnpm db:generate
-pnpm db:push
-pnpm db:seed
+# 3. Prepare the database in one command
+#    (generate Prisma client → sync schema → seed 10k products + demo user)
+pnpm setup
 
 # 4. Run both apps (web :3000, api :3001)
 pnpm dev
 ```
+
+> **Fastest path for reviewers:** with Docker, `docker compose up -d` then
+> `cp .env.example .env` needs **no edits** — the default `DATABASE_URL` already
+> points at the compose Postgres, and the example `JWT_ACCESS_SECRET` is valid as-is.
+> So the whole setup is: `docker compose up -d && cp .env.example .env && pnpm install && pnpm setup && pnpm dev`.
 
 Open **http://localhost:3000**. Demo credentials are pre-filled:
 
@@ -161,6 +165,7 @@ packages/shared   Zod schemas, constants, shared types
 | `pnpm lint` / `pnpm typecheck` | Lint / typecheck the workspace |
 | `pnpm --filter @app/api test` | API unit tests |
 | `pnpm --filter @app/api test:e2e` | API e2e tests |
+| `pnpm setup` | One-shot DB bootstrap: generate client + sync schema + seed |
 | `pnpm db:push` / `pnpm db:seed` | Sync schema / seed data |
 
 ---

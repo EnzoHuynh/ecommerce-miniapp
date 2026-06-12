@@ -16,7 +16,8 @@
     "test": "turbo run test",
     "db:generate": "pnpm --filter @app/api prisma:generate",
     "db:push": "pnpm --filter @app/api prisma:push",
-    "db:seed": "pnpm --filter @app/api prisma:seed"
+    "db:seed": "pnpm --filter @app/api prisma:seed",
+    "setup": "pnpm db:generate && pnpm db:push && pnpm db:seed"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
